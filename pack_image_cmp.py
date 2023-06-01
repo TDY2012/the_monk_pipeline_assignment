@@ -13,14 +13,15 @@ import shutil
 
 
 # FOR CANDIDATE: suggestion: copy "INTERNAL" folder to the same directory with this script
-INTERNAL_DIR = os.path.dirname(__file__) + "/INTERNAL"
+#   The command os.path.join is preferred when concatenating the file path
+#   because the delimiter of a file path is different across operating systems.
+INTERNAL_DIR = os.path.join(os.path.dirname(__file__), "INTERNAL")
 INTERNAL_DIR = os.path.normpath(INTERNAL_DIR)
 
 # FOR CANDIDATE: DO NOT MODIFY THESE VARIABLE
 MNK_IMG_DIR = "img"
 RES_WIDTH = "2048"
 RES_HEIGHT = "858"
-
 
 def pack_images(scene_data_dict):
     """
@@ -48,54 +49,64 @@ def pack_images(scene_data_dict):
     output_dir = scene_data_dict.get("output_dir", "")
     is_test = scene_data_dict.get("test_mode", False)
 
+    #   An output directory should be normalized here just once.
+    output_dir = os.path.normpath(output_dir)
+
     element_class = "{}_{}".format(element_name, class_name)
     resolution = "r{w}x{h}".format(w=RES_WIDTH, h=RES_HEIGHT)
 
     failed_list = []
 
     if not os.path.exists(output_dir):
-        print("!! directory not found : {}".format(output_dir))
+        print("!! output directory not found : {}".format(output_dir))
         failed_list.append(
-            {"scene": input_scene_name, "shot": "", "message": "directory not found",}
+            {
+                "scene": input_scene_name, "shot": "",
+                "message": "output directory not found",
+            }
         )
         return
 
     # FOR CANDIDATE: DO NOT MODIFY THIS JOB DIRECTORY, ITS PATTERN IS ALWAYS "/img/nine"
     job_dir = os.path.join(INTERNAL_DIR, MNK_IMG_DIR, job_name)
 
+    #   Define a scene directory variable here for clarity.
+    scene_dir = os.path.normpath(os.path.join(job_dir, input_scene_name))
+
     output_list = []
     latest_final_image_dir_list = []
 
-    shot_dir_list = glob.glob(
-        os.path.join(job_dir, input_scene_name, "*",).replace("\\", "/")
-    )
-    for shot_dir in shot_dir_list:
+    #   We will use a base shot directory name again and there is no
+    #   restriction on a shot naming convention. Just use os.listdir.
+    shot_name_list = os.listdir(scene_dir)
+
+    for shot_name in shot_name_list:
 
         # get all final image (exr) directories
         # /img/nine/sq0700/12000/Master_cmp/v010.r2048x858.exr/sq0700_12000.Master_cmp.1003.exr
         final_image_list = glob.glob(
             os.path.join(
-                shot_dir,
+                scene_dir,
+                shot_name,
                 element_class,
                 "v[0-9][0-9][0-9].{res}.exr".format(res=resolution),
             )
         )
 
         if not final_image_list:
-            scene_shot_re = re.search("(sq[0-9]{4})/([0-9]{5})$", shot_dir)
-            if scene_shot_re:
-                scene_name = scene_shot_re.group(1)
-                shot_name = scene_shot_re.group(2)
-                print(
-                    "!! not found any image of shot {}_{}".format(scene_name, shot_name)
-                )
-                failed_list.append(
-                    {
-                        "scene": scene_name,
-                        "shot": shot_name,
-                        "message": "image not found",
-                    }
-                )
+
+            #   A scene name is unchanged and we have already got a shot name.
+            #   No need to extract them from the final image directory again.
+            print(
+                "!! not found any image of shot {}_{}".format(input_scene_name, shot_name)
+            )
+            failed_list.append(
+                {
+                    "scene": input_scene_name,
+                    "shot": shot_name,
+                    "message": "image not found",
+                }
+            )
             continue
 
         # get latest version of final image
@@ -103,14 +114,29 @@ def pack_images(scene_data_dict):
 
     for latest_final_image_dir in latest_final_image_dir_list:
         latest_final_image_dir = os.path.normpath(latest_final_image_dir)
-        output_dir = os.path.normpath(output_dir)
+
+        #   NOTE: This is quite dangerous. I suggested we should construct a
+        #   new output directory from parts instead of this substitution technique.
         output_image_dir = latest_final_image_dir.replace(INTERNAL_DIR, output_dir)
 
         print("## source      : {}".format(latest_final_image_dir))
         print("## destination : {}\n".format(output_image_dir))
 
+        #   Make sure the output directory exists.
+        os.makedirs(output_image_dir, exist_ok=True)
+
         if not is_test:
-            shutil.copytree(latest_final_image_dir, output_image_dir)
+
+            #   Copy only .exr files instead of an entire folder.
+            latest_final_image_file_list = glob.glob(
+                os.path.join(
+                    latest_final_image_dir,
+                    "*.exr",
+                )
+            )
+
+            for latest_final_image_file in latest_final_image_file_list:
+                shutil.copy2(latest_final_image_file, output_image_dir)
 
         output_list.append(output_image_dir)
 
