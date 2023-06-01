@@ -1,0 +1,20 @@
+
+
+command: python /tmp/workspace/misc/recruit/for_candidate/pack_image_cmp.py -scene sq0700 -o /tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1
+output:
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1/img/nine/sq0700/11000/Master_cmp/v045.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1/img/nine/sq0700/12000/Master_cmp/v004.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1/img/nine/sq0700/13000/Master_cmp/v045.r2048x858.exr
+
+
+command: python /tmp/workspace/misc/recruit/for_candidate/pack_image_cmp.py -scene sq0800 -o /tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1
+output:
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1/img/nine/sq0800/10000/Master_cmp/v004.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1/img/nine/sq0800/11000/Master_cmp/v013.r2048x858.exr
+
+
+
+command: python /tmp/workspace/misc/recruit/for_candidate/pack_image_cmp.py -scene sq0900 -o /tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1
+output:
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1/img/nine/sq0900/24000/Master_cmp/v008.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX1/img/nine/sq0900/25000/Master_cmp/v002.r2048x858.exr

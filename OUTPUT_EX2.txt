@@ -1,0 +1,25 @@
+command python /tmp/workspace/misc/recruit/for_candidate/pack_image_cmp.py -scene sq0700 sq0800 sq0900 -o /tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2
+
+output:
+
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0700/11000/Master_cmp/v045.r2048x858.Bg.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0700/11000/Master_cmp/v045.r2048x858.EFX_candle.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0700/11000/Master_cmp/v046.r2048x858.char_extra01.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0700/11000/Master_cmp/v046.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0700/12000/Master_cmp/v005.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0700/12000/Master_cmp/v016.r2048x858.tv015.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0700/13000/Master_cmp/v046.r2048x858.exr
+
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0800/10000/Master_cmp/v005.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0800/10000/Master_cmp/v016.r2048x858.tv015.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0800/11000/Master_cmp/v002.r2048x858.Bg.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0800/11000/Master_cmp/v003.r2048x858.catRiam.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0800/11000/Master_cmp/v005.r2048x858.EFX_smoke.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0800/11000/Master_cmp/v005.r2048x858.char_extra_a.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0800/11000/Master_cmp/v014.r2048x858.exr
+
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0900/24000/Master_cmp/v005.r2048x858.Bg_02.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0900/24000/Master_cmp/v009.r2048x858.char_extra01.tif
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0900/24000/Master_cmp/v009.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0900/25000/Master_cmp/v003.r2048x858.exr
+/tmp/workspace/misc/recruit/for_candidate/OUTPUT_EX2/img/nine/sq0900/25000/Master_cmp/v016.r2048x858.rav015.tif
