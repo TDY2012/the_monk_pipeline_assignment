@@ -4,6 +4,7 @@
 import argparse
 import glob
 import os
+import re
 import shutil
 
 
@@ -17,6 +18,44 @@ INTERNAL_DIR = os.path.normpath(INTERNAL_DIR)
 MNK_IMG_DIR = "img"
 RES_WIDTH = "2048"
 RES_HEIGHT = "858"
+
+def increase_image_path_version_number(image_path):
+    """
+    increase a version number of given image path
+
+    Args:
+
+    - *image_path* (str):
+        Example: 
+            .../img/nine/sq0700/12000/Master_cmp/v010.r2048x858.exr
+    """
+
+    #   Consider only image file name.
+    image_dir, image_name = os.path.split(image_path)
+    scene_shot_re = re.search("^v(?P<version_number>\d\d\d)\.r(?P<width>\d+)x(?P<height>\d+)(?:|\.(?P<matte>\w+))\.(?P<ext>\w+)$", image_name)
+
+    if scene_shot_re:
+        image_info_dict = scene_shot_re.groupdict()
+
+        #   Matte name is optional. So, set it to empty string,
+        #   if it does not exist.
+        if(image_info_dict["matte"] == None):
+            image_info_dict["matte"] = ""
+        else:
+            image_info_dict["matte"] = ".{matte}".format(matte=image_info_dict["matte"])
+
+        #   Parse the version number and increase its value by 1.
+        image_info_dict["version_number"] = int(image_info_dict["version_number"]) + 1
+
+        #   Reconstruct the image file name and concatenate it to
+        #   its original directory.
+        return os.path.join(
+            image_dir,
+            "v{version_number:03d}.r{width}x{height}{matte}.{ext}".format(**image_info_dict)
+        )
+
+    else:
+        return image_dir
 
 def pack_images(scene_data_dict):
     """
@@ -77,13 +116,18 @@ def pack_images(scene_data_dict):
 
     for shot_name in shot_name_list:
 
+        #   For clarity and reusability sake.
+        element_dir = os.path.join(
+            scene_dir,
+            shot_name,
+            element_class,
+        )
+
         # get all final image (exr) directories
         # /img/nine/sq0700/12000/Master_cmp/v010.r2048x858.exr/sq0700_12000.Master_cmp.1003.exr
         final_image_list = glob.glob(
             os.path.join(
-                scene_dir,
-                shot_name,
-                element_class,
+                element_dir,
                 "v[0-9][0-9][0-9].{res}.exr".format(res=resolution),
             )
         )
@@ -107,12 +151,55 @@ def pack_images(scene_data_dict):
         # get latest version of final image
         latest_final_image_dir_list.append(max(final_image_list))
 
+        #   Since glob cannot match a variable length string,
+        #   I decided to use regex instead.
+        final_matte_image_name_list = os.listdir(element_dir)
+
+        matte_name_to_final_matte_image_dict = dict()
+
+        for final_matte_image_name in final_matte_image_name_list:
+
+            #   Match each matte image name with the predefined pattern.
+            final_matte_image_name_matching = re.match(
+                "^v[0-9][0-9][0-9].{res}.(?P<matte>\w+)\.tif$".format(res=resolution),
+                final_matte_image_name
+            )
+
+            #   Store only latest version for each matte name.
+            if final_matte_image_name_matching:
+                matte_name = final_matte_image_name_matching.group("matte")
+
+                if matte_name not in matte_name_to_final_matte_image_dict.keys() or matte_name_to_final_matte_image_dict[matte_name] < final_matte_image_name:
+                    matte_name_to_final_matte_image_dict[matte_name] = final_matte_image_name
+
+        if not matte_name_to_final_matte_image_dict:
+            print(
+                "!! not found any matte image of shot {}_{}".format(input_scene_name, shot_name)
+            )
+            failed_list.append(
+                {
+                    "scene": input_scene_name,
+                    "shot": shot_name,
+                    "message": "matte image not found",
+                }
+            )
+            continue
+
+        final_matte_image_list = [
+            os.path.join(element_dir, final_matte_image)
+            for final_matte_image in matte_name_to_final_matte_image_dict.values()
+        ]
+
+        # get latest version of final matte image
+        latest_final_image_dir_list.extend(final_matte_image_list)
+
     for latest_final_image_dir in latest_final_image_dir_list:
         latest_final_image_dir = os.path.normpath(latest_final_image_dir)
 
         #   NOTE: This is quite dangerous. I suggested we should construct a
         #   new output directory from parts instead of this substitution technique.
         output_image_dir = latest_final_image_dir.replace(INTERNAL_DIR, output_dir)
+        output_image_dir = increase_image_path_version_number(output_image_dir)
 
         print("## source      : {}".format(latest_final_image_dir))
         print("## destination : {}\n".format(output_image_dir))
@@ -130,6 +217,16 @@ def pack_images(scene_data_dict):
                 )
             )
 
+            #   Now, include .tif files.
+            latest_final_image_file_list.extend(
+                glob.glob(
+                    os.path.join(
+                        latest_final_image_dir,
+                        "*.tif",
+                    )
+                )
+            )
+
             for latest_final_image_file in latest_final_image_file_list:
                 shutil.copy2(latest_final_image_file, output_image_dir)
 
@@ -138,7 +235,10 @@ def pack_images(scene_data_dict):
     # summary
     if failed_list:
         print("\n##=================ERROR: Scene/Shot=================")
-        for failed_item in sorted(failed_list):
+
+        #   NOTE:   Some versions of Python does not support a
+        #           traditional dictionary sorting.
+        for failed_item in sorted(failed_list, key=lambda x: x["scene"]):
             print(
                 "{scene}{separator}{shot}: {message}".format(
                     scene=failed_item.get("scene", ""),
@@ -166,8 +266,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-sc",
         "-scene",
-        dest="scene_name",
+        dest="scene_name_list",
         required=True,
+        nargs='+',
         help="a scene name ex. -scene sq0100",
     )
 
@@ -190,12 +291,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    pack_image_dict = {
-        "job_name": "nine",
-        "class_name": "cmp",
-        "element_name": "Master",
-        "scene_name": args.scene_name,
-        "output_dir": args.output_dir,
-        "test_mode": args.is_test_mode,
-    }
-    pack_images(pack_image_dict)
+    for scene_name in args.scene_name_list:
+        pack_image_dict = {
+            "job_name": "nine",
+            "class_name": "cmp",
+            "element_name": "Master",
+            "scene_name": scene_name,
+            "output_dir": args.output_dir,
+            "test_mode": args.is_test_mode,
+        }
+        pack_images(pack_image_dict)
